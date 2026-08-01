@@ -21,6 +21,11 @@ DOWNLOADER_MIDDLEWARES = {
     "src.crawler.middlewares.retry_middleware.ExponentialRetryMiddleware": 550,
 }
 
+# Enable Validation and Deduplication Item Pipeline
+ITEM_PIPELINES = {
+    "src.crawler.pipelines.HackathonValidationAndDedupPipeline": 300,
+}
+
 # Logging configuration
 LOG_LEVEL = "INFO"
 LOG_FORMAT = "%(asctime)s [%(name)s] %(levelname)s: %(message)s"
