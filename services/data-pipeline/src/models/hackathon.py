@@ -24,6 +24,8 @@ class Organizer(BaseModel):
 class Location(BaseModel):
     city: Optional[str] = Field(None, description="City where the hackathon takes place")
     country: Optional[str] = Field(None, description="Country where the hackathon takes place")
+    latitude: Optional[float] = Field(None, description="Latitude coordinate for the map")
+    longitude: Optional[float] = Field(None, description="Longitude coordinate for the map")
     isOnline: bool = Field(False, description="Whether remote/online participation is allowed")
 
 
@@ -55,6 +57,7 @@ class HackathonDocument(BaseModel):
     id: str = Field(..., description="Unique slug ID for the hackathon record")
     source: str = Field(..., description="Source platform name (e.g., MLH, Devpost)")
     sourceUrl: str = Field(..., description="Original scraper URL for the hackathon")
+    imageUrl: Optional[str] = Field(None, description="URL for the hackathon banner/logo image")
     title: str = Field(..., description="Full title of the hackathon")
     tagline: str = Field("", description="Short tagline or summary")
     description: str = Field(..., description="Detailed description text or markdown")
