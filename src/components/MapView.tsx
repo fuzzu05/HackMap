@@ -6,7 +6,6 @@ import { Hackathon } from '@/lib/mockData';
 import { MapPin } from 'lucide-react';
 
 export default function MapView({ hackathons }: { hackathons: Hackathon[] }) {
-  // Safe default for Mapbox token
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
   return (
@@ -15,18 +14,20 @@ export default function MapView({ hackathons }: { hackathons: Hackathon[] }) {
         <Map
           mapboxAccessToken={mapboxToken}
           initialViewState={{
-            longitude: -12.4,
+            longitude: -122.4,
             latitude: 37.8,
             zoom: 1.5
           }}
           mapStyle="mapbox://styles/mapbox/dark-v11"
         >
           {hackathons.map((h) => (
-            <Marker key={h.id} longitude={h.coordinates.longitude} latitude={h.coordinates.latitude}>
-              <div style={{ color: 'var(--color-peach-glow)' }}>
-                <MapPin size={24} fill="currentColor" color="#000" />
-              </div>
-            </Marker>
+            h.location.latitude && h.location.longitude ? (
+              <Marker key={h.id} longitude={h.location.longitude} latitude={h.location.latitude}>
+                <div style={{ color: 'var(--color-peach-glow)' }}>
+                  <MapPin size={24} fill="currentColor" color="#000" />
+                </div>
+              </Marker>
+            ) : null
           ))}
         </Map>
       ) : (
