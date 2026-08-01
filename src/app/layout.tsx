@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/lib/firebase/authContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import Link from 'next/link';
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,12 +50,12 @@ export default function RootLayout({
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
           <nav style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 2rem', borderBottom: '1px solid var(--color-muted-sage)', background: 'var(--background)' }}>
             <div style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
-              <a href="/">HackMap</a>
+              <Link href="/">HackMap</Link>
             </div>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <ThemeToggle />
-              <a href="/dashboard" style={{ color: 'var(--color-peach-glow)' }}>Dashboard</a>
-              <a href="/login" style={{ color: 'var(--foreground)' }}>Login</a>
+              <Link href="/dashboard" style={{ color: 'var(--color-peach-glow)' }}>Dashboard</Link>
+              <Link href="/login" style={{ color: 'var(--foreground)' }}>Login</Link>
             </div>
           </nav>
           <AuthProvider>
