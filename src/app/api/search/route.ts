@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { hackathonIndex } from '@/lib/algolia';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,16 +10,19 @@ export async function GET(request: Request) {
   }
 
   try {
-    // TODO: Implement actual Algolia search here using algoliasearch client
-    // For Phase 1, we return a mock placeholder indicating the architecture is set up.
-    
-    const mockResults = [
-      { id: '1', title: `Result for "${query}"`, type: 'mock' }
-    ];
+    const { hits } = await hackathonIndex.search(query, {
+      hitsPerPage: 10,
+    });
 
-    return NextResponse.json({ results: mockResults }, { status: 200 });
+    return NextResponse.json({ results: hits }, { status: 200 });
   } catch (error) {
     console.error('Error performing search:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    // Return mock results if Algolia isn't fully configured by Fuzail yet
+    return NextResponse.json({ 
+      error: 'Algolia search failed, returning mock data',
+      results: [
+        { id: '1', name: `Mock Result for "${query}"`, type: 'mock' }
+      ]
+    }, { status: 500 });
   }
 }
