@@ -1,0 +1,86 @@
+.card {
+  background: var(--background);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-muted-sage);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-peach-glow);
+}
+
+.image {
+  height: 160px;
+  background-size: cover;
+  background-position: center;
+}
+
+.content {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.formatBadge {
+  align-self: flex-start;
+  padding: 4px 8px;
+  background-color: var(--color-powder-petal);
+  color: #1a1a1a;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.organizer {
+  font-size: 0.9rem;
+  color: var(--color-peach-glow);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.techStack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+}
+
+.techBadge {
+  background-color: var(--color-alabaster-grey);
+  color: var(--foreground);
+  padding: 4px 10px;
+  border-radius: var(--border-radius-full);
+  font-size: 0.75rem;
+}
