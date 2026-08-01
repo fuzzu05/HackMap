@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Anyone can read hackathons, but only admins (Node.js SDK via service account) can write
+    match /hackathons/{hackathonId} {
+      allow read: if true;
+      allow write: if false; // Scraper writes via Service Account (Admin SDK bypasses rules)
+    }
+
+    // Users can only read and write their own documents
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can only manage their own bookmarks
+      match /bookmarks/{bookmarkId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Users can only read their own recommendations
+      match /recommendations/{recommendationId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if false; // Written by python backend via Admin SDK
+      }
+    }
+    
+  }
+}

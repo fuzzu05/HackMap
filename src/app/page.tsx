@@ -1,31 +1,76 @@
-import Link from 'next/link';
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect, useCallback } from 'react';
+import FilterSidebar from '@/components/FilterSidebar';
+import HackathonCard from '@/components/HackathonCard';
+import MapView from '@/components/MapView';
+import { Hackathon } from '@/lib/mockData';
+import styles from './page.module.css';
+
+export default function DiscoveryPage() {
+  const [filters, setFilters] = useState({});
+  const [hackathons, setHackathons] = useState<Hackathon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchHackathons() {
+      setLoading(true);
+      try {
+        let url = '/api/search?q=';
+        const modes = (filters as any).modes;
+        if (modes && modes.length > 0) {
+          url += '&modes=' + encodeURIComponent(modes.join(','));
+        }
+        const res = await fetch(url);
+        const data = await res.json();
+
+        // Zubaida's API gracefully falls back to mock results on failure
+        if (!res.ok) {
+          console.warn(data.error);
+        }
+
+        setHackathons(data.results || []);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchHackathons();
+  }, [filters]);
+
+  const handleFilterChange = useCallback((newFilters: any) => {
+    setFilters(newFilters);
+  }, []);
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-8 sm:p-20 font-[family-name:var(--font-geist-sans)] bg-gray-50">
-      <main className="flex flex-col gap-8 row-start-2 items-center text-center max-w-2xl">
-        <h1 className="text-5xl font-extrabold tracking-tight text-gray-900">
-          Welcome to <span className="text-blue-600">HackMap</span>
-        </h1>
-        <p className="text-lg text-gray-600">
-          The ultimate platform to discover, filter, and track hackathons globally.
-        </p>
-        
-        <div className="flex gap-4 items-center flex-col sm:flex-row mt-8">
-          <Link
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-blue-600 text-white gap-2 hover:bg-blue-700 text-sm sm:text-base h-12 px-8 font-semibold shadow-sm"
-            href="/login"
-          >
-            Get Started
-          </Link>
-          <Link
-            className="rounded-full border border-solid border-gray-300 transition-colors flex items-center justify-center bg-white text-gray-900 hover:bg-gray-100 text-sm sm:text-base h-12 px-8 font-semibold"
-            href="/dashboard"
-          >
-            Go to Dashboard
-          </Link>
-        </div>
-      </main>
-    </div>
+    <main className={styles.container}>
+      <FilterSidebar onFilterChange={handleFilterChange} />
+
+      <div className={styles.mainContent}>
+        <section className={styles.listSection}>
+          <div className={styles.header}>
+            <h1>Discover Hackathons</h1>
+            <p>Find your next challenge globally.</p>
+          </div>
+
+          {loading ? (
+            <div style={{ padding: '2rem', textAlign: 'center' }}>Loading hackathons...</div>
+          ) : hackathons.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center' }}>No hackathons found.</div>
+          ) : (
+            hackathons.map((hackathon) => (
+              <HackathonCard key={hackathon.id} hackathon={hackathon} />
+            ))
+          )}
+        </section>
+
+        <section className={styles.mapSection}>
+          <MapView hackathons={hackathons} />
+        </section>
+      </div>
+    </main>
   );
 }
