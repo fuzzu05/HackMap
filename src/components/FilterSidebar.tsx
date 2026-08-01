@@ -7,6 +7,21 @@ import styles from './FilterSidebar.module.css';
 
 export default function FilterSidebar({ onFilterChange }: { onFilterChange?: (filters: any) => void }) {
   const [duration, setDuration] = React.useState([72]);
+  const [inPerson, setInPerson] = React.useState(false);
+  const [online, setOnline] = React.useState(false);
+
+  React.useEffect(() => {
+    if (onFilterChange) {
+      const modes = [];
+      if (inPerson) modes.push('IN_PERSON', 'HYBRID');
+      if (online) modes.push('ONLINE', 'HYBRID');
+      
+      onFilterChange({
+        modes: Array.from(new Set(modes)),
+        duration: duration[0]
+      });
+    }
+  }, [inPerson, online, duration, onFilterChange]);
 
   return (
     <aside className={styles.sidebar}>
@@ -16,21 +31,21 @@ export default function FilterSidebar({ onFilterChange }: { onFilterChange?: (fi
         <h3 className={styles.sectionTitle}>Format</h3>
         
         <div className={styles.checkboxWrapper}>
-          <Checkbox.Root className={styles.checkboxRoot} id="c1">
+          <Checkbox.Root className={styles.checkboxRoot} id="c1" checked={inPerson} onCheckedChange={(checked) => setInPerson(checked as boolean)}>
             <Checkbox.Indicator className={styles.checkboxIndicator}>
               <Check size={14} />
             </Checkbox.Indicator>
           </Checkbox.Root>
-          <label className={styles.label} htmlFor="c1">In-Person</label>
+          <label className={styles.label} htmlFor="c1">In-Person / Hybrid</label>
         </div>
         
         <div className={styles.checkboxWrapper}>
-          <Checkbox.Root className={styles.checkboxRoot} id="c2">
+          <Checkbox.Root className={styles.checkboxRoot} id="c2" checked={online} onCheckedChange={(checked) => setOnline(checked as boolean)}>
             <Checkbox.Indicator className={styles.checkboxIndicator}>
               <Check size={14} />
             </Checkbox.Indicator>
           </Checkbox.Root>
-          <label className={styles.label} htmlFor="c2">Online</label>
+          <label className={styles.label} htmlFor="c2">Online / Hybrid</label>
         </div>
       </div>
 

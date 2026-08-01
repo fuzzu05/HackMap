@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import FilterSidebar from '@/components/FilterSidebar';
 import HackathonCard from '@/components/HackathonCard';
 import MapView from '@/components/MapView';
@@ -17,14 +17,19 @@ export default function DiscoveryPage() {
     async function fetchHackathons() {
       setLoading(true);
       try {
-        const res = await fetch('/api/search?q=all');
+        let url = '/api/search?q=';
+        const modes = (filters as any).modes;
+        if (modes && modes.length > 0) {
+          url += '&modes=' + encodeURIComponent(modes.join(','));
+        }
+        const res = await fetch(url);
         const data = await res.json();
-        
+
         // Zubaida's API gracefully falls back to mock results on failure
         if (!res.ok) {
           console.warn(data.error);
         }
-        
+
         setHackathons(data.results || []);
         setError(null);
       } catch (err: any) {
@@ -36,21 +41,21 @@ export default function DiscoveryPage() {
     fetchHackathons();
   }, [filters]);
 
-  const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = useCallback((newFilters: any) => {
     setFilters(newFilters);
-  };
+  }, []);
 
   return (
     <main className={styles.container}>
       <FilterSidebar onFilterChange={handleFilterChange} />
-      
+
       <div className={styles.mainContent}>
         <section className={styles.listSection}>
           <div className={styles.header}>
             <h1>Discover Hackathons</h1>
             <p>Find your next challenge globally.</p>
           </div>
-          
+
           {loading ? (
             <div style={{ padding: '2rem', textAlign: 'center' }}>Loading hackathons...</div>
           ) : hackathons.length === 0 ? (
@@ -61,7 +66,7 @@ export default function DiscoveryPage() {
             ))
           )}
         </section>
-        
+
         <section className={styles.mapSection}>
           <MapView hackathons={hackathons} />
         </section>

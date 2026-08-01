@@ -3,22 +3,24 @@ import { hackathonIndex } from '@/lib/algolia';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q');
-
-  if (!query) {
-    return NextResponse.json({ error: 'Missing query parameter' }, { status: 400 });
-  }
+  const query = searchParams.get('q') || '';
+  const modesStr = searchParams.get('modes');
 
   try {
-    const { hits } = await hackathonIndex.search(query, {
-      hitsPerPage: 10,
-    });
+    const searchOptions: any = { hitsPerPage: 100 };
+    
+    if (modesStr) {
+      const modes = modesStr.split(',');
+      searchOptions.filters = modes.map(m => `mode:${m}`).join(' OR ');
+    }
+
+    const { hits } = await hackathonIndex.search(query, searchOptions);
 
     return NextResponse.json({ results: hits }, { status: 200 });
   } catch (error) {
     console.error('Error performing search:', error);
     // Return robust mock data adhering to the JSON contract if Algolia fails
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Algolia search failed, returning mock data',
       results: [
         {

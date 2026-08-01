@@ -8,6 +8,8 @@
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: pointer;
+  color: var(--foreground);
+  flex-shrink: 0;
 }
 
 .card:hover {
@@ -49,6 +51,7 @@
 .title {
   font-size: 1.25rem;
   font-weight: 700;
+  color: var(--foreground);
 }
 
 .organizer {

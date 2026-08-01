@@ -1,9 +1,25 @@
 import os
 import logging
 from typing import Optional
+from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import credentials, firestore
-from ..models.hackathon import HackathonDocument, RecommendationDocument
+from algoliasearch.search_client import SearchClient
+from ../models.hackathon import HackathonDocument, RecommendationDocument
+
+load_dotenv()
+
+# Initialize Algolia
+try:
+    algolia_app_id = os.getenv("ALGOLIA_APP_ID")
+    algolia_admin_key = os.getenv("ALGOLIA_ADMIN_KEY")
+    if algolia_app_id and algolia_admin_key:
+        search_client = SearchClient.create(algolia_app_id, algolia_admin_key)
+        algolia_index = search_client.init_index("hackathons")
+    else:
+        algolia_index = None
+except Exception as e:
+    algolia_index = None
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +54,27 @@ def get_firestore_client() -> firestore.Client:
 
 def upsert_hackathon(hackathon_doc: HackathonDocument, db: Optional[firestore.Client] = None) -> str:
     """
-    Upserts a normalized HackathonDocument into the `/hackathons` collection.
+    Upserts a normalized HackathonDocument into the `/hackathons` collection and Algolia.
     Returns the document ID.
     """
     client = db or get_firestore_client()
+    doc_data = hackathon_doc.model_dump()
+    
+    # Firestore sync
     doc_ref = client.collection("hackathons").document(hackathon_doc.id)
-    doc_ref.set(hackathon_doc.model_dump(), merge=True)
+    doc_ref.set(doc_data, merge=True)
     logger.info("Upserted hackathon document /hackathons/%s", hackathon_doc.id)
+    
+    # Algolia sync
+    if algolia_index:
+        try:
+            algolia_doc = doc_data.copy()
+            algolia_doc["objectID"] = hackathon_doc.id
+            algolia_index.save_object(algolia_doc)
+            logger.info("Pushed hackathon %s to Algolia index", hackathon_doc.id)
+        except Exception as e:
+            logger.error("Failed to push hackathon %s to Algolia: %s", hackathon_doc.id, str(e))
+
     return hackathon_doc.id
 
 

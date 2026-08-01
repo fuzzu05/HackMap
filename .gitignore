@@ -50,3 +50,6 @@ venv/
 .pytest_cache/
 *.log
 
+
+# Firebase Service Account
+serviceAccountKey.json

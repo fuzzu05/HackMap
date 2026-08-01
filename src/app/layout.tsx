@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/lib/firebase/authContext";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -9,8 +11,31 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "HackMap",
-  description: "Discover and filter global hackathons.",
+  title: {
+    default: "HackMap - Discover & Win Global Hackathons",
+    template: "%s | HackMap"
+  },
+  description: "Find your next hackathon. HackMap aggregates global AI, Web3, and Open Source hackathons into one centralized, intelligent dashboard.",
+  openGraph: {
+    title: "HackMap - Discover Global Hackathons",
+    description: "The intelligent hub for finding hackathons globally.",
+    url: "https://hackmap.ai",
+    siteName: "HackMap",
+    images: [
+      {
+        url: "https://hackmap.ai/og-image.jpg",
+        width: 1200,
+        height: 630,
+      }
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "HackMap",
+    description: "Discover global hackathons effortlessly.",
+  }
 };
 
 export default function RootLayout({
@@ -22,7 +47,19 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.variable}>
         <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
-          {children}
+          <nav style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 2rem', borderBottom: '1px solid var(--color-muted-sage)', background: 'var(--background)' }}>
+            <div style={{ fontWeight: 'bold', fontSize: '1.25rem' }}>
+              <a href="/">HackMap</a>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <ThemeToggle />
+              <a href="/dashboard" style={{ color: 'var(--color-peach-glow)' }}>Dashboard</a>
+              <a href="/login" style={{ color: 'var(--foreground)' }}>Login</a>
+            </div>
+          </nav>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
