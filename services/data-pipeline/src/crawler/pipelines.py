@@ -13,8 +13,10 @@ class HackathonValidationAndDedupPipeline:
     2. Runs items through the DeduplicationEngine to merge cross-listed duplicates.
     """
 
+    _shared_engine = DeduplicationEngine(similarity_threshold=0.85, date_window_days=3)
+
     def __init__(self):
-        self.engine = DeduplicationEngine(similarity_threshold=0.85, date_window_days=3)
+        self.engine = self.__class__._shared_engine
 
     def open_spider(self, spider):
         logger.info("HackathonValidationAndDedupPipeline opened for spider: %s", spider.name)

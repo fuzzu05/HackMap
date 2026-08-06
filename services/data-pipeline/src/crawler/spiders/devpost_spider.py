@@ -33,7 +33,7 @@ class DevpostSpider(scrapy.Spider):
     allowed_domains = ["devpost.com"]
     start_urls = ["https://devpost.com/hackathons"]
 
-    def __init__(self, use_mock_seeds: bool = True, *args, **kwargs):
+    def __init__(self, use_mock_seeds: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.use_mock_seeds = use_mock_seeds
 
