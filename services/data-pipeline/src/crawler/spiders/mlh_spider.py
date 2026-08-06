@@ -28,7 +28,7 @@ class MLHSpider(scrapy.Spider):
 
     name = "mlh"
     allowed_domains = ["mlh.io", "mlh.com", "www.mlh.com"]
-    start_urls = ["https://mlh.io/seasons/2024/events"]
+    start_urls = ["https://mlh.io/seasons/2026/events"]
 
     def __init__(self, use_mock_seeds: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
