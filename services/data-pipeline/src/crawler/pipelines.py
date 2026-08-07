@@ -3,6 +3,8 @@ from scrapy.exceptions import DropItem
 from ..models.hackathon import HackathonDocument, HackathonMode
 from ..deduplication.engine import DeduplicationEngine
 from ..normalization.normalizer import apply_location_jitter
+from ..normalization.geocoder import geocode_and_jitter_offline
+from twisted.internet import threads
 
 logger = logging.getLogger(__name__)
 
@@ -42,16 +44,29 @@ class HackathonValidationAndDedupPipeline:
         if is_duplicate:
             logger.info("Merged duplicate hackathon record: '%s' (%s)", merged_doc.title, merged_doc.source)
             
-        # 3. Location Jitter for Map Plotting
-        # If the event is online (or missing coordinates), scatter them deterministically
-        if (merged_doc.mode == HackathonMode.ONLINE or 
-            merged_doc.location.latitude is None or 
-            merged_doc.location.longitude is None):
-            
+        # 3. Location Handling
+        if merged_doc.mode == HackathonMode.ONLINE:
+            # Always apply Atlantic Ocean jitter for online hackathons
             lat, lng = apply_location_jitter(merged_doc.id)
             merged_doc.location.latitude = lat
             merged_doc.location.longitude = lng
-            merged_doc.location.isOnline = True # Ensure it's marked online if scattered
+            merged_doc.location.isOnline = True
+            return merged_doc.model_dump()
+            
+        if merged_doc.location.latitude is None or merged_doc.location.longitude is None:
+            # Offline hackathon missing coordinates: geocode and jitter in a thread to avoid blocking Scrapy
+            def _geocode_callback(coords):
+                lat, lng = coords
+                if lat is not None and lng is not None:
+                    merged_doc.location.latitude = lat
+                    merged_doc.location.longitude = lng
+                return merged_doc.model_dump()
+                
+            city = merged_doc.location.city or ""
+            country = merged_doc.location.country or ""
+            d = threads.deferToThread(geocode_and_jitter_offline, city, country, merged_doc.id)
+            d.addCallback(_geocode_callback)
+            return d
             
         return merged_doc.model_dump()
 

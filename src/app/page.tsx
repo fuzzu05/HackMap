@@ -22,6 +22,12 @@ export default function DiscoveryPage() {
         if (modes && modes.length > 0) {
           url += '&modes=' + encodeURIComponent(modes.join(','));
         }
+        
+        const duration = (filters as any).duration;
+        if (duration) {
+          url += '&duration=' + duration;
+        }
+        
         const res = await fetch(url);
         const data = await res.json();
 
