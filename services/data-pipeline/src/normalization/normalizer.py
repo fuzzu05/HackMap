@@ -130,3 +130,24 @@ def clean_html_text(html_content: str) -> str:
     # Clean excessive newlines and whitespace
     cleaned_lines = [line.strip() for line in text.splitlines()]
     return "\n".join(line for line in cleaned_lines if line).strip()
+
+
+def apply_location_jitter(hackathon_id: str) -> Tuple[float, float]:
+    """
+    Generates a deterministic pseudo-random lat/long offset for online hackathons
+    so they scatter nicely over the Atlantic Ocean instead of stacking at [0, 0].
+    """
+    # Seed a hash with the hackathon ID
+    h = hashlib.sha256(hackathon_id.encode("utf-8")).hexdigest()
+    
+    # Convert portions of the hash to a float between 0.0 and 1.0
+    val1 = int(h[:8], 16) / 0xFFFFFFFF
+    val2 = int(h[8:16], 16) / 0xFFFFFFFF
+    
+    # Atlantic Ocean bounding box approx
+    # Lat: 20 to 50
+    # Lng: -30 to -60
+    lat = 20.0 + (val1 * 30.0)
+    lng = -60.0 + (val2 * 30.0)
+    
+    return round(lat, 5), round(lng, 5)

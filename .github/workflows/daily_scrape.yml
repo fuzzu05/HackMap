@@ -1,0 +1,40 @@
+name: Hackathon Data Pipeline
+
+on:
+  schedule:
+    # Run every 12 hours (at 00:00 and 12:00 UTC)
+    - cron: '0 0,12 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  scrape-and-sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f "services/data-pipeline/requirements.txt" ]; then pip install -r services/data-pipeline/requirements.txt; fi
+        # Ensure algoliasearch is installed
+        pip install algoliasearch scrapy pydantic beautifulsoup4 python-dateutil scrapy-playwright
+        playwright install chromium
+        
+    - name: Run Scrapy Pipeline
+      run: |
+        python services/data-pipeline/scripts/run_local_scrape.py
+        
+    - name: Push to Algolia
+      env:
+        ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+        ALGOLIA_WRITE_KEY: ${{ secrets.ALGOLIA_WRITE_KEY }}
+      run: |
+        python services/data-pipeline/scripts/push_to_algolia.py

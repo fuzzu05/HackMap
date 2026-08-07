@@ -53,3 +53,6 @@ venv/
 
 # Firebase Service Account
 serviceAccountKey.json
+
+# Data Pipeline Output
+services/data-pipeline/output/
