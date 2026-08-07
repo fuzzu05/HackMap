@@ -13,6 +13,11 @@ export async function GET(request: Request) {
       const modes = modesStr.split(',');
       searchOptions.filters = modes.map(m => `mode:${m}`).join(' OR ');
     }
+    
+    const duration = searchParams.get('duration');
+    if (duration) {
+      searchOptions.numericFilters = [`durationHours <= ${duration}`];
+    }
 
     const { hits } = await hackathonIndex.search(query, searchOptions);
 

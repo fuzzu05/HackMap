@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
-from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
 
 
 class HackathonMode(str, Enum):
@@ -72,6 +72,19 @@ class HackathonDocument(BaseModel):
     dedupHash: str = Field(..., description="Unique similarity fingerprint hash for deduplication")
     status: HackathonStatus = Field(HackathonStatus.UPCOMING, description="Lifecycle status")
     lastScrapedAt: str = Field(..., description="ISO-8601 UTC timestamp of last successful scrape")
+    durationHours: int = Field(0, description="Duration in hours, auto-computed from dates")
+
+    @model_validator(mode='after')
+    def compute_duration(self) -> 'HackathonDocument':
+        if self.dates and self.dates.hackathonStart and self.dates.hackathonEnd:
+            try:
+                start_dt = datetime.fromisoformat(self.dates.hackathonStart.replace("Z", "+00:00"))
+                end_dt = datetime.fromisoformat(self.dates.hackathonEnd.replace("Z", "+00:00"))
+                delta = end_dt - start_dt
+                self.durationHours = max(0, int(delta.total_seconds() / 3600))
+            except Exception:
+                pass
+        return self
 
 
 class RankedHackathon(BaseModel):
