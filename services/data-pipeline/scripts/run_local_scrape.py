@@ -10,6 +10,9 @@ from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 from src.crawler.spiders.devpost_spider import DevpostSpider
 from src.crawler.spiders.mlh_spider import MLHSpider
+from src.crawler.spiders.dorahacks_spider import DoraHacksSpider
+from src.crawler.spiders.unstop_spider import UnstopSpider
+from src.crawler.spiders.devfolio_spider import DevfolioSpider
 from src.crawler.pipelines import HackathonValidationAndDedupPipeline
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -31,8 +34,11 @@ def run_scrape_and_dedup():
     settings.set("LOG_LEVEL", "INFO")
     
     process = CrawlerProcess(settings)
-    process.crawl(DevpostSpider, use_mock_seeds=False)
-    process.crawl(MLHSpider, use_mock_seeds=False)
+    process.crawl(DevpostSpider)
+    process.crawl(MLHSpider)
+    process.crawl(DoraHacksSpider)
+    process.crawl(UnstopSpider)
+    process.crawl(DevfolioSpider)
     
     # Start the reactor and block until all spiders finish
     process.start()

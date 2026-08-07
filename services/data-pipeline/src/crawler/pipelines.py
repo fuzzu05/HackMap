@@ -1,7 +1,8 @@
 import logging
 from scrapy.exceptions import DropItem
-from ..models.hackathon import HackathonDocument
+from ..models.hackathon import HackathonDocument, HackathonMode
 from ..deduplication.engine import DeduplicationEngine
+from ..normalization.normalizer import apply_location_jitter
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,18 @@ class HackathonValidationAndDedupPipeline:
         merged_doc, is_duplicate = self.engine.process_record(doc)
         if is_duplicate:
             logger.info("Merged duplicate hackathon record: '%s' (%s)", merged_doc.title, merged_doc.source)
+            
+        # 3. Location Jitter for Map Plotting
+        # If the event is online (or missing coordinates), scatter them deterministically
+        if (merged_doc.mode == HackathonMode.ONLINE or 
+            merged_doc.location.latitude is None or 
+            merged_doc.location.longitude is None):
+            
+            lat, lng = apply_location_jitter(merged_doc.id)
+            merged_doc.location.latitude = lat
+            merged_doc.location.longitude = lng
+            merged_doc.location.isOnline = True # Ensure it's marked online if scattered
+            
         return merged_doc.model_dump()
 
     def get_deduplicated_records(self):

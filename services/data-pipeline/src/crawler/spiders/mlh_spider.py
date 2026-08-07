@@ -30,18 +30,14 @@ class MLHSpider(scrapy.Spider):
     allowed_domains = ["mlh.io", "mlh.com", "www.mlh.com"]
     start_urls = ["https://mlh.io/seasons/2026/events"]
 
-    def __init__(self, use_mock_seeds: bool = False, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.use_mock_seeds = use_mock_seeds
 
     def parse(self, response):
         """
         Parses MLH season events listing from the Inertia JSON block.
         """
-        if self.use_mock_seeds:
-            for item in self._generate_mock_seeds():
-                yield item
-            return
+
 
         json_data = response.css('script[data-page="app"]::text').get()
         if not json_data:
@@ -55,7 +51,7 @@ class MLHSpider(scrapy.Spider):
             return
 
         props = data.get("props", {})
-        events = props.get("upcomingEvents", []) + props.get("pastEvents", [])
+        events = props.get("upcomingEvents", [])
 
         for event in events:
             title = event.get("name", "MLH Hackathon")
@@ -96,41 +92,8 @@ class MLHSpider(scrapy.Spider):
                 techStack=["Python", "React", "Node.js", "Firebase"],
                 eligibility="Global, Enrolled university students and recent grads",
                 dedupHash=dedup_hash,
-                status=HackathonStatus.UPCOMING if format_type != "ended" else HackathonStatus.PAST,
+                status=HackathonStatus.UPCOMING if format_type != "ended" else HackathonStatus.ENDED,
                 lastScrapedAt=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             )
             yield doc.model_dump()
 
-    def _generate_mock_seeds(self):
-        """
-        Generates realistic MLH season hackathon records for pipeline deduplication and integration testing.
-        Note: Includes an intentional cross-listed duplicate with Devpost's 'Global AI Agents Hackathon 2026'
-        to verify that the DeduplicationEngine merges MLH + Devpost records properly!
-        """
-        seeds = [
-            {
-                "id": "mlh-global-ai-agents-2026",
-                "source": "MLH",
-                "sourceUrl": "https://mlh.io/events/global-ai-agents-2026",
-                "title": "Global AI Agents Hackathon '26",
-                "tagline": "Major League Hacking Global AI Season Event",
-                "description": "An official MLH hybrid event focused on building autonomous agentic AI systems.",
-                "organizer": {"name": "Major League Hacking", "url": "https://mlh.io"},
-                "mode": "HYBRID",
-                "location": {"city": "San Francisco", "country": "USA", "isOnline": True},
-                "dates": {
-                    "registrationOpen": "2026-08-01T00:00:00Z",
-                    "registrationClose": "2026-09-10T23:59:59Z",
-                    "hackathonStart": "2026-09-12T00:00:00Z",
-                    "hackathonEnd": "2026-09-14T23:59:59Z",
-                },
-                "prizes": {"totalPoolUsd": 75000.0, "currency": "USD"},
-                "tags": ["AI / Machine Learning", "MLH", "Student", "Autonomous Agents"],
-                "techStack": ["Python", "LangChain", "Next.js", "OpenAI", "Firebase"],
-                "eligibility": "Global, Open to developers and students",
-                "dedupHash": generate_dedup_hash("Global AI Agents Hackathon '26", "2026-09-12T00:00:00Z"),
-                "status": "UPCOMING",
-                "lastScrapedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-        ]
-        return seeds

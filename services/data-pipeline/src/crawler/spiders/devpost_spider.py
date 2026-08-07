@@ -30,21 +30,14 @@ class DevpostSpider(scrapy.Spider):
 
     name = "devpost"
     allowed_domains = ["devpost.com"]
-    start_urls = ["https://devpost.com/api/hackathons"]
-
-    def __init__(self, use_mock_seeds: bool = False, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.use_mock_seeds = use_mock_seeds
+    start_urls = ["https://devpost.com/api/hackathons?status[]=open&status[]=upcoming&page=1"]
 
     def start_requests(self):
-        if self.use_mock_seeds:
-            for item in self._generate_mock_seeds():
-                yield item
-            return
-            
         for url in self.start_urls:
-            # We don't need Playwright anymore, standard Scrapy Request works for the API!
-            yield scrapy.Request(url, headers={'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            yield scrapy.Request(
+                url, 
+                headers={'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            )
 
     def parse(self, response):
         """
@@ -56,6 +49,18 @@ class DevpostSpider(scrapy.Spider):
         except json.JSONDecodeError:
             logger.error("Failed to decode Devpost API JSON response")
             return
+            
+        # Handle Pagination (only on first page request)
+        if response.url.endswith("&page=1"):
+            meta = data.get("meta", {})
+            total_count = meta.get("total_count", 0)
+            per_page = meta.get("per_page", 15)
+            import math
+            if per_page > 0:
+                total_pages = math.ceil(total_count / per_page)
+                for page in range(2, total_pages + 1):
+                    next_url = response.url.replace("&page=1", f"&page={page}")
+                    yield scrapy.Request(next_url, headers=response.request.headers)
 
         for event in hackathons:
             title = event.get("title", "Devpost Hackathon")
@@ -78,7 +83,7 @@ class DevpostSpider(scrapy.Spider):
                 tags = ["Open Source", "Software"]
                 
             status_str = event.get("open_state", "open")
-            status = HackathonStatus.UPCOMING if status_str == "open" else HackathonStatus.PAST
+            status = HackathonStatus.UPCOMING if status_str == "open" else HackathonStatus.ENDED
 
             doc = HackathonDocument(
                 id=f"devpost-{event.get('id') or dedup_hash[:10]}",
@@ -106,34 +111,3 @@ class DevpostSpider(scrapy.Spider):
             )
             yield doc.model_dump()
 
-    def _generate_mock_seeds(self):
-        """
-        Generates realistic Devpost hackathon records for offline/pipeline integration testing.
-        """
-        seeds = [
-            {
-                "id": "devpost-global-ai-agents-2026",
-                "source": "Devpost",
-                "sourceUrl": "https://devpost.com/hackathons/global-ai-agents-2026",
-                "title": "Global AI Agents Hackathon 2026",
-                "tagline": "Build autonomous agents using modern LLM frameworks",
-                "description": "Create innovative autonomous workflows and agentic AI systems.",
-                "organizer": {"name": "AI Builders Foundation", "url": "https://devpost.com"},
-                "mode": "ONLINE",
-                "location": {"city": None, "country": None, "isOnline": True},
-                "dates": {
-                    "registrationOpen": "2026-08-01T00:00:00Z",
-                    "registrationClose": "2026-09-10T23:59:59Z",
-                    "hackathonStart": "2026-09-12T00:00:00Z",
-                    "hackathonEnd": "2026-09-14T23:59:59Z",
-                },
-                "prizes": {"totalPoolUsd": 75000.0, "currency": "USD"},
-                "tags": ["AI / Machine Learning", "Autonomous Agents", "LLM"],
-                "techStack": ["Python", "LangChain", "Next.js", "OpenAI"],
-                "eligibility": "Global, Open to developers and students",
-                "dedupHash": generate_dedup_hash("Global AI Agents Hackathon 2026", "2026-09-12T00:00:00Z"),
-                "status": "UPCOMING",
-                "lastScrapedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-        ]
-        return seeds
