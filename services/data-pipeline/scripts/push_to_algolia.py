@@ -11,10 +11,10 @@ def main():
         sys.exit(1)
         
     app_id = os.environ.get('ALGOLIA_APP_ID')
-    api_key = os.environ.get('ALGOLIA_WRITE_KEY')
+    api_key = os.environ.get('ALGOLIA_ADMIN_KEY') or os.environ.get('ALGOLIA_WRITE_KEY')
     
     if not app_id or not api_key:
-        print("Warning: ALGOLIA_APP_ID and ALGOLIA_WRITE_KEY environment variables are required.")
+        print("Warning: ALGOLIA_APP_ID and ALGOLIA_ADMIN_KEY environment variables are required.")
         print("Skipping Algolia push. This is expected in non-production local runs.")
         sys.exit(0)
         
